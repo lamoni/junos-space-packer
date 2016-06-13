@@ -58,7 +58,7 @@
         "7<wait>",
         "Junos_Space123!<enter><wait>",
         "STATUS=`/var/www/maintenance/html/getStartupStatus.cgi`; while true; ",
-        "do if [[ $STATUS != *\"\\\"earName\\\" : \\\"appmgt\\\",    \\\"appName\\\" : \\\"Appmgt\\\",    \\\"order\\\" : 3,    \\\"started\\\" : true,    \\\"finished\\\" : true,    \\\"enabled\\\" : true,    \\\"disableMsg\\\" : \\\"\\\",    \\\"initialized\\\" : true,    \\\"deployed\\\" : true,    \\\"initializeStatus\\\" : \\\"SUCCESS\\\"\"* ]]; then echo \"Waiting for Space to finish initializing...\" && sleep 10s && STATUS=`/var/www/maintenance/html/getStartupStatus.cgi`; else echo 'Junos_Space123!' | sudo -ES /bin/bash -c 'service all && service jmp-watchdog stop && service heartbeat stop && service jboss stop && service jboss-dc stop && service mysql stop && service snmpd stop && shutdown -h now && poweroff'; break; fi done<enter>"
+        "do if [[ $STATUS != *\"\\\"success\\\" : true\"* ]]; then echo $STATUS && sleep 10s && STATUS=`/var/www/maintenance/html/getStartupStatus.cgi`; else echo 'Junos_Space123!' | sudo -ES /bin/bash -c 'service all && service jmp-watchdog stop && service heartbeat stop && service jboss stop && service jboss-dc stop && service mysql stop && service snmpd stop && shutdown -h now && poweroff'; break; fi done<enter>"
       ],
       "vboxmanage": [
         ["modifyvm", "{{.Name}}", "--memory", "10024"],

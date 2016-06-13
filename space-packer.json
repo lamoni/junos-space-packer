@@ -23,7 +23,7 @@
       "ssh_disable_agent": true,
       "format": "ova",
       "guest_additions_mode": "disable",
-      "shutdown_command": "echo 'Junos_Space123!' | sudo -S /usr/bin/perl /var/www/cgi-bin/secure/systemPower.pl msg=ShuttingDown action=shutdown param=1",
+      "shutdown_command": "/bin/true",
       "shutdown_timeout": "50m",
       "vm_name": "space-virtualbox",
       "output_directory": "space-virtualbox",
@@ -54,29 +54,16 @@
         "<wait10><wait10><wait10><wait10><wait10><wait10>",
         "<wait10><wait10><wait10><wait10><wait10><wait10>",
         "<wait10><wait10><wait10><wait10><wait10><wait10>",
+
         "7<wait>",
         "Junos_Space123!<enter><wait>",
-        "STATUS=`/var/www/maintenance/html/getStartupStatus.cgi`; while [[ $STATUS != *\"\\\"earName\\\" : \\\"appmgt\\\",    \\\"appName\\\" : \\\"Appmgt\\\",    \\\"order\\\" : 3,    \\\"started\\\" : true,    \\\"finished\\\" : true,    \\\"enabled\\\" : true,    \\\"disableMsg\\\" : \\\"\\\",    \\\"initialized\\\" : true,    \\\"deployed\\\" : true,    \\\"initializeStatus\\\" : \\\"SUCCESS\\\"\"* ]]; do echo \"NOT DONE YET\"; sleep 10s; STATUS=`/var/www/maintenance/html/getStartupStatus.cgi`; done<enter>",
-        "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>",
-        "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>",
-        "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>",
-        "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>",
-        "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>",
-        "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>",
-        "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>",
-        "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>",
-        "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>",
-        "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>",
-        "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>",
-        "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>",
-        "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>",
-        "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>",
-        "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>",
-        "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>"
+        "STATUS=`/var/www/maintenance/html/getStartupStatus.cgi`; while true; ",
+        "do if [[ $STATUS != *\"\\\"earName\\\" : \\\"appmgt\\\",    \\\"appName\\\" : \\\"Appmgt\\\",    \\\"order\\\" : 3,    \\\"started\\\" : true,    \\\"finished\\\" : true,    \\\"enabled\\\" : true,    \\\"disableMsg\\\" : \\\"\\\",    \\\"initialized\\\" : true,    \\\"deployed\\\" : true,    \\\"initializeStatus\\\" : \\\"SUCCESS\\\"\"* ]]; then echo \"Waiting for Space to finish initializing...\" && sleep 10s && STATUS=`/var/www/maintenance/html/getStartupStatus.cgi`; else echo 'Junos_Space123!' | sudo -ES /bin/bash -c 'service all && service jmp-watchdog stop && service heartbeat stop && service jboss stop && service jboss-dc stop && service mysql stop && service snmpd stop && shutdown -h now && poweroff'; break; fi done<enter>"
       ],
       "vboxmanage": [
         ["modifyvm", "{{.Name}}", "--memory", "10024"],
-        ["modifyvm", "{{.Name}}", "--cpus", "4"]
+        ["modifyvm", "{{.Name}}", "--cpus", "4"],
+        ["modifyvm", "{{.Name}}", "--acpi", "on"]
       ]
     }
   ]

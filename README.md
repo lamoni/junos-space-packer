@@ -29,21 +29,25 @@ export GOPATH=$HOME/go
 export PATH=$PATH:$GOPATH/bin
 ```
 
-- Install lamoni/packer with "go get"
+- Install mitchellh/packer with "go get"
 ```
-go get github.com/lamoni/packer
+go get github.com/mitchellh/packer
 ```
 
-- Switch to branch
+- Remove packer folder and clone lamoni/packer into the directory, then switch to branch with ssh_host fix
 ```
-cd ~/go/src/github.com/lamoni/packer/
+cd ~/go/src/github.com/mitchellh/
+rm -rf ./packer/
+git clone https://github.com/lamoni/packer packer
+cd packer/
+git fetch
 git checkout issue2972-ssh_host-virtualbox
 ```
 
 - Compile lamoni/packer
 ```
-cd ~/go/src/github.com/lamoni/packer/
-go build -o bin/packer
+cd ~/go/src/github.com/mitchellh/packer/
+sudo -E make
 ```
 
 
@@ -51,7 +55,7 @@ go build -o bin/packer
 #1 - Modify variables.json with your desired values
     - NOTE: You *MUST* choose an admin_password that meets Junos Space's requirements for the admin account.  The default value in variables.json meets those requirements.
 
-#2 - Build with:
+#2 - Build Junos Space image with:
 ```
-$GOPATH/src/github.com/lamoni/packer/bin/packer build -var-file=variables.json space-packer.json
+$GOPATH/src/github.com/mitchellh/packer/bin/packer build -var-file=variables.json space-packer.json
 ```

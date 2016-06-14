@@ -59,3 +59,5 @@ sudo -E make
 ```
 $GOPATH/src/github.com/mitchellh/packer/bin/packer build -var-file=variables.json space-packer.json
 ```
+
+#3 - After running through the instantiation and provisioning process, Packer will output a .ova file you can then import into VirtualBox

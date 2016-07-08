@@ -23,15 +23,26 @@ fi
 
 cd $cwd
 mkdir -p http
-if [ ! "$(ls -A http)" ]; then
+if [ ! "$(ls -A http/jsnap.rpm)" ]; then
 
-    # Download JSNAP, Service Now, and Junos Space
+    # Download JSNAP
     python ./lib/juniper-support-scraper/juniper-support-scraper.py --output-name "http/jsnap.rpm" https://webdownload.juniper.net/swdl/dl/secure/site/1/record/12595.html $1 $2
-    python ./lib/juniper-support-scraper/juniper-support-scraper.py --output-name "http/servicenow.img" https://webdownload.juniper.net/swdl/dl/secure/site/1/record/60879.html $1 $2
-    python ./lib/juniper-support-scraper/juniper-support-scraper.py --output-name "http/space.ova" https://webdownload.juniper.net/swdl/dl/secure/site/1/record/62382.html $1 $2
 
 fi
 
+if [ ! "$(ls -A http/servicenow.img)" ]; then
+
+    # Download Service Now
+    python ./lib/juniper-support-scraper/juniper-support-scraper.py --output-name "http/servicenow.img" https://webdownload.juniper.net/swdl/dl/secure/site/1/record/60879.html $1 $2
+
+fi
+
+if [ ! "$(ls -A http/space.ova)" ]; then
+
+    # Download Junos Space
+    python ./lib/juniper-support-scraper/juniper-support-scraper.py --output-name "http/space.ova" https://webdownload.juniper.net/swdl/dl/secure/site/1/record/62382.html $1 $2
+
+fi
 
 $GOPATH/src/github.com/mitchellh/packer/bin/packer build -var-file=variables.json space-packer.json
 

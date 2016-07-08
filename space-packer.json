@@ -14,7 +14,7 @@
       "format": "ova",
       "guest_additions_mode": "disable",
       "shutdown_command": "/bin/true",
-      "shutdown_timeout": "50m",
+      "shutdown_timeout": "9900m",
       "vm_name": "space-virtualbox",
       "output_directory": "space-virtualbox",
       "http_directory" : "http",
@@ -60,7 +60,8 @@
         "STATUS=`curl -sS https://{{user `ip_web_gui`}}/mainui/ --insecure`; while true; ",
         "do if [[ $STATUS != *\"loginuserpwd\"* ]]; then echo \"Waiting for Space to finish initializing\"",
         " && sleep 10s && STATUS=`curl -sS https://{{user `ip_web_gui`}}/mainui/ --insecure`; ",
-        "else sleep 20s; perl installScript.pl add platform `pwd` `pwd` blah 15.2R2.4 && sleep 30s && echo '{{user `admin_password`}}' | sudo -ES /bin/bash -c ",
+        "else sleep 20s; curl -O http://{{user `local_ip`}}:{{ .HTTPPort }}/upload_jsnap_op_scripts.py && ",
+        "python upload_jsnap_op_scripts.py '`echo super:juniper123 | base64`' && perl installScript.pl add platform `pwd` `pwd` blah 15.2R2.4 && sleep 30s && echo '{{user `admin_password`}}' | sudo -ES /bin/bash -c ",
         "'service all && service jmp-watchdog stop && service jboss stop ",
         "&& service jboss-dc stop && service mysql stop && service snmpd stop ",
         "&& shutdown -h +3 && echo 'Powering down in 3 minutes' && sleep 3m && poweroff'; break; fi done<enter>"

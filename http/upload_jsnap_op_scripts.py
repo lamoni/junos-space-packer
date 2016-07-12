@@ -1,26 +1,24 @@
 import urllib2
+import sys
 
 dataSnap = """
 <script>
       <scriptName>jsnap-snapshot.slax</scriptName>
       <scriptContents><![CDATA[
 
-/* @ISLOCAL="true" */
-/* @PASSDEVICECREDENTIALS="true" */
+\/* @ISLOCAL="true" *\/
+\/* @PASSDEVICECREDENTIALS="true" *\/
 version 1.0;
 
-/* Junos standard namespaces */
 ns junos = "http://xml.juniper.net/junos/*/junos";
 ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
 ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
 
-/* EXSLT namespaces */
 ns exsl extension = "http://exslt.org/common";
 ns dyn extension = "http://exslt.org/dynamic";
 ns func extension = "http://exslt.org/functions";
 ns date extension = "http://exslt.org/dates-and-times";
 
-/* custom namespaces */
 ns jfile = "http://xml.juniper.net/jawalib/libjfile";
 ns cbd = "http://xml.juniper.net/jawalib/libcbd";
 
@@ -54,40 +52,29 @@ var $jfile:JUNOS = false();
 
 match / {
 
-   /* ----------------------------------- */
-   /* load the "curly-brace-doc" file now */
-   /* ----------------------------------- */
 
-	var $ini-file = cbd:read( $CONF-FILE );
-	if( $ini-file/cbd:error ) {
-	   for-each( $ini-file/cbd:error ) {
-	      expr jcs:output( "ERROR[", file, "]: ", message );
-	   }
-		<xsl:message terminate="yes"> "Exiting.";
-	}
+    var $ini-file = cbd:read( $CONF-FILE );
+    if( $ini-file/cbd:error ) {
+        for-each( $ini-file/cbd:error ) {
+            expr jcs:output( "ERROR[", file, "]: ", message );
+        }
+        <xsl:message terminate="yes"> "Exiting.";
+    }
 
-	/* ----------------------------------------------------------------- */
-   /* if a section was provided, make sure it's valid before proceeding */
-	/* ----------------------------------------------------------------- */
+    var $section-cmd-ns = jppc:section( $ini-file );
 
-	var $section-cmd-ns = jppc:section( $ini-file );
+    if( $SECTION ) {
+        if(not( $section-cmd-ns )) {
+            expr jcs:output("ERROR: Could not find: '", $SECTION, "' in config file '", $CONF-FILE, "' !" );
+            <xsl:message terminate="yes">;
+        }
+    }
 
-	if( $SECTION ) {
-		if(not( $section-cmd-ns )) {
-			expr jcs:output("ERROR: Could not find: '", $SECTION, "' in config file '", $CONF-FILE, "' !" );
-			<xsl:message terminate="yes">;
-		}
-	}
-
-	var $targets = jppc:targets();
-	if(not( $targets )) {
-	   expr jcs:output("ERROR: no TARGET or TARGET-FILE defined !");
-	   <xsl:message terminate="yes">;
-	}
-
-	/* --------------------------------------- */
-	/* create a connection to the Junos device */
-	/* --------------------------------------- */
+    var $targets = jppc:targets();
+    if(not( $targets )) {
+       expr jcs:output("ERROR: no TARGET or TARGET-FILE defined !");
+       <xsl:message terminate="yes">;
+    }
 
    var $passwd = {
        call get_passwd($PASSWD);
@@ -105,62 +92,54 @@ match / {
 template do_snapshot( $ini-file, $target, $passwd, $section-cmd-ns )
 {
    expr jcs:output("Connecting to ", $USER, "@", $target, " ... ");
-	var $jnx = jcs:open( $target, $USER, $passwd );
-	if(not( $jnx )) {
-	   expr jcs:output("Unable to connect to device: ", $target, " ... SKIPPING! ");
-	}
-	else {
-	   expr jcs:output("CONNECTED.");
+    var $jnx = jcs:open( $target, $USER, $passwd );
+    if(not( $jnx )) {
+       expr jcs:output("Unable to connect to device: ", $target, " ... SKIPPING! ");
+    }
+    else {
+       expr jcs:output("CONNECTED.");
 
-	   /* -------------------------------------------------------- */
-	   /* execute the section; collecting the data from the device */
-	   /* -------------------------------------------------------- */
+       if( $section-cmd-ns ) {
+          call do_junos_cmd( $jnx, $target, $cmd-ns = $section-cmd-ns );
+       }
+       else {
+          for-each( $ini-file/do/child::* ) {
+             var $child = name(.);
+             var $cmd-ns = dyn:evaluate( "$ini-file/" _ $child );
+             if(not( $cmd-ns )) {
+                expr jcs:output("ERROR: [" _ $CONF-FILE _ "]: Could not find: ", $child, " ... SKIPPING!" );
+             }
+             else {
+                call do_junos_cmd( $jnx, $target, $cmd-ns );
+             }
+          }
+       }
 
-	   if( $section-cmd-ns ) {
-	      call do_junos_cmd( $jnx, $target, $cmd-ns = $section-cmd-ns );
-	   }
-	   else {
-	      for-each( $ini-file/do/child::* ) {
-	         var $child = name(.);
-	         var $cmd-ns = dyn:evaluate( "$ini-file/" _ $child );
-	         if(not( $cmd-ns )) {
-	            expr jcs:output("ERROR: [" _ $CONF-FILE _ "]: Could not find: ", $child, " ... SKIPPING!" );
-	         }
-	         else {
-	            call do_junos_cmd( $jnx, $target, $cmd-ns );
-	         }
-	      }
-	   }
-
-	   /* ---------------------------------- */
-	   /* close the connection to the device */
-	   /* ---------------------------------- */
-
-	   expr jcs:close( $jnx );
-	}
+       expr jcs:close( $jnx );
+    }
 }
 
 template do_junos_cmd( $jnx, $target, $cmd-ns )
 {
-	var $cmd-name = name( $cmd-ns );
-	var $filename = concat( $target, "__", $cmd-name,"__", $SNAP-NAME, ".xml" );
+    var $cmd-name = name( $cmd-ns );
+    var $filename = concat( $target, "__", $cmd-name,"__", $SNAP-NAME, ".xml" );
 
-	expr jcs:output( "EXEC: '", $cmd-ns/command, "' ... ");
+    expr jcs:output( "EXEC: '", $cmd-ns/command, "' ... ");
 
-	var $rpc-cmd = <command> $cmd-ns/command;
-	var $rpc-rsp = jcs:execute-xns( $jnx, $rpc-cmd );
+    var $rpc-cmd = <command> $cmd-ns/command;
+    var $rpc-rsp = jcs:execute-xns( $jnx, $rpc-cmd );
 
-	if( $rpc-rsp/xnm:error ) {
-		expr jcs:output("ERROR: [invalid Junos command]: '", $cmd-ns/command, "'" );
-	}
-	else {
-		expr jcs:output( "SAVE: '", $filename, "' ... ");
-		<exsl:document href=$filename indent="yes"> {
-			<jppc:section name=$cmd-name mode=$SNAP-NAME conf=$CONF-FILE target=$target ts=$TIME-NOW> {
-				copy-of $rpc-rsp/*;   /**/
-			}
-		}
-	}
+    if( $rpc-rsp/xnm:error ) {
+        expr jcs:output("ERROR: [invalid Junos command]: '", $cmd-ns/command, "'" );
+    }
+    else {
+        expr jcs:output( "SAVE: '", $filename, "' ... ");
+        <exsl:document href=$filename indent="yes"> {
+            <jppc:section name=$cmd-name mode=$SNAP-NAME conf=$CONF-FILE target=$target ts=$TIME-NOW> {
+                copy-of $rpc-rsp/*;
+            }
+        }
+    }
 }
 
 template get_passwd($PASSWD)
@@ -178,45 +157,10 @@ template get_passwd($PASSWD)
 </script>
 """
 
-dataCompare = """
-<script>
-      <scriptName>jsnap-compare.slax</scriptName>
-      <scriptContents><![CDATA[
 
-Version 1.0;
-ns junos = "http://xml.juniper.net/junos/*\/junos";
-ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
-ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
-ns ext = "http://xmlsoft.org/XSLT/namespace";
+req = urllib2.Request("https://"+sys.argv[1]+"/api/space/script-management/scripts", dataSnap)
 
-import "../import/junos.xsl";
-
-\/*
-* This commit script checks that any interfaces with "CORE" or "core"
-* in the description is configured with an MTU of 4484.
-* The search criteria and MTU should be changed to fit the environment
-* and requirements.
-*\/
-
-
-match configuration { for-each (interfaces/interface) { var $int = name; var $unit = unit/name; var $desc = unit/description; var $mtu = mtu; if (contains($desc, "CORE") || contains($desc, "core")) { if (not ($mtu == 4484)) { <xnm:warning> { <message> { expr "MTU on backbone interface"; expr $int; expr "."; expr $unit; expr " is not set to 4484"; expr " ("; expr $mtu; expr ")"; } } } } }
-
-
-      ]]></scriptContents>
-</script>
-"""
-
-req = urllib2.Request("https://192.168.0.201/api/space/script-management/scripts", dataSnap)
-
-req.add_header('Authorization', 'Basic c3VwZXI6anVuaXBlcjEyMw==')
-req.add_header('Content-Type', 'application/vnd.net.juniper.space.script-management.script+xml;version=1;charset=UTF-8')
-
-response = urllib2.urlopen(req)
-
-
-req = urllib2.Request("https://192.168.0.201/api/space/script-management/scripts", dataCompare)
-
-req.add_header('Authorization', 'Basic c3VwZXI6anVuaXBlcjEyMw==')
+req.add_header('Authorization', 'Basic ' + sys.argv[2])
 req.add_header('Content-Type', 'application/vnd.net.juniper.space.script-management.script+xml;version=1;charset=UTF-8')
 
 response = urllib2.urlopen(req)

@@ -4,6 +4,9 @@ import sys
 dataSnap = """
 <script>
       <scriptName>jsnap-snapshot.slax</scriptName>
+      <type>TYPE_OP</type>
+      <format>FORMAT_SLAX</format>
+      <destFileName>jsnap-snapshot.slax</destFileName>
       <scriptContents><![CDATA[
 
 \/* @ISLOCAL="true" *\/

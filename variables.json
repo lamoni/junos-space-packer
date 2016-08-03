@@ -1,6 +1,5 @@
 {
-  "local_ip": "192.168.0.8",
-  "path_to_space_ova": "/Users/flamoni/Downloads/space.ova",
+  "local_ip": "192.168.0.9",
   "admin_password": "Junos_Space123!",
   "ip_vip": "192.168.0.200",
   "ip_web_gui": "192.168.0.201",

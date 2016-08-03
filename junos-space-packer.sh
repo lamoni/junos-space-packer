@@ -33,7 +33,7 @@ fi
 if [ ! "$(ls -A http/servicenow.img)" ]; then
 
     # Download Service Now
-    python ./lib/juniper-support-scraper/juniper-support-scraper.py --output-name "http/servicenow.img" https://webdownload.juniper.net/swdl/dl/secure/site/1/record/60879.html $1 $2
+    python ./lib/juniper-support-scraper/juniper-support-scraper.py --output-name "http/servicenow.img" https://webdownload.juniper.net/swdl/dl/anon/site/1/record/60879.html $1 $2
 
 fi
 

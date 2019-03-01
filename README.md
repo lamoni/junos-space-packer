@@ -7,15 +7,6 @@ This project houses a Packer (http://packer.io) template for building and provis
 #Planned Support
 - VMWare
 
-#Important Note
-
-As of June 13, 2016, the mainline Packer binary does not support customizing the IP used to verify SSH connectivity
-on the machine it is spinning up (for VirtualBox builders).  This was problematic because Space is a little different
-than your normal Linux box, thus the SSH port forwarding that Packer usually does wasn't working, and the builds were
- failing.  To get around this, I forked Packer and added the capability.  A Pull Request (https://github.com/mitchellh/packer/pull/3617)
- has been submitted to Packer, but no guarantees on if/when it'll be accepted.  For now, if you want to use this, you
- MUST compile and use the following fork and branch of Packer to run space-packer.json: https://github.com/lamoni/packer/tree/issue2972-ssh_host-virtualbox
-
 # Setup Prerequisites
 
 - Ensure GoLang is installed

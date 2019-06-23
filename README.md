@@ -1,10 +1,10 @@
 # Junos Space Packer
 This project houses a Packer (http://packer.io) template for building and provisioning a Junos Space virtual appliance.
 
-#Currently Supported Builders
+# Currently Supported Builders
 - VirtualBox
 
-#Planned Support
+# Planned Support
 - VMWare
 
 # Usage
